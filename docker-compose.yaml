@@ -1,0 +1,48 @@
+# choose the version of docker, so that docker understands what
+# features it can and cannot use
+version: "3.8"
+# The children of your services will be your containers
+# you can name your containers
+services:
+  mongodb:
+    image: "mongo"
+    volumes:
+      - data:/data/db
+    # environment:
+    #   # - MONGO_INITDB_ROOT_USERNAME=max (another way to set environment variables)
+    #   MONGO_INITDB_ROOT_USERNAME: max
+    #   MONGO_INITDB_ROOT_PASSWORD: secret
+    env_file:
+      - ./env/mongo.env
+  backend:
+    build: ./backend
+    # Longer syntax
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile # If you named you docker file something else
+    #   args:
+    #     some-arg: 1
+    ports:
+      - "80:80"
+    volumes:
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./env/backend.env
+    depends_on:
+      - mongodb
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+
+volumes:
+  data:
+  logs:
